@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UMKM Mojokerto - Verifikasi Lapangan</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ink: '#0f172a',
+            paper: '#f6f1e8',
+            sand: '#efe4d0',
+            rust: '#b45309',
+            forest: '#14532d',
+            gold: '#f59e0b'
+          },
+          boxShadow: {
+            soft: '0 18px 45px rgba(15, 23, 42, 0.12)'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      background:
+        radial-gradient(circle at top left, rgba(245, 158, 11, 0.14), transparent 34%),
+        radial-gradient(circle at top right, rgba(20, 83, 45, 0.12), transparent 28%),
+        linear-gradient(180deg, #fbf7f0 0%, #f6f1e8 48%, #efe6d7 100%);
+    }
+    .grain {
+      background-image: linear-gradient(rgba(255,255,255,0.12), rgba(255,255,255,0.12)), radial-gradient(rgba(0,0,0,0.06) 1px, transparent 1px);
+      background-size: auto, 18px 18px;
+      background-position: 0 0, 0 0;
+    }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="text-ink antialiased">
+  <div class="min-h-screen pb-24">
+    <header class="relative overflow-hidden border-b border-black/5 bg-white/60 backdrop-blur-xl">
+      <div class="absolute inset-0 grain opacity-30"></div>
+      <div class="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div class="min-w-0 flex-1">
+            <p class="inline-flex items-center rounded-full bg-forest px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-white">📎 Logo BPS</p>
+            <h1 class="mt-2 text-xl font-black tracking-tight text-ink sm:mt-3 sm:text-4xl">Verifikasi UMKM Lapangan</h1>
+            <p class="mt-1 max-w-2xl text-xs leading-6 text-slate-600 sm:mt-2 sm:text-base">Filter data master dari Google Maps dan Tokopedia, lalu pilih usaha yang akan diverifikasi petugas di lapangan.</p>
+          </div>
+          <div class="hidden rounded-2xl bg-slate-100 px-3 py-2 text-slate-700 shadow-soft sm:block sm:flex-shrink-0">
+            <div class="min-w-0">
+              <div class="text-xs font-semibold leading-tight">Admin UMKM</div>
+              <div class="text-[11px] text-slate-600">ADMIN</div>
+              <button type="button" class="mt-2 rounded-full bg-slate-200 px-2 py-1 text-[11px] font-semibold text-slate-700 transition hover:bg-slate-300">Logout</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-5"></div>
+      </div>
+    </header>
+
+    <main class="mx-auto mt-4 max-w-7xl px-3 sm:mt-5 sm:px-6 lg:px-8">
+      <section class="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+        <div>
+          <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 class="text-lg font-black tracking-tight sm:text-xl">Daftar verifikasi</h2>
+              <p id="resultMeta" class="mt-1 text-xs text-slate-600 sm:text-sm">Menampilkan daftar usaha siap verifikasi.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+              <button id="openFilterDrawer" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-black/10 shadow-sm sm:px-3 sm:py-2 sm:text-sm">
+                <span aria-hidden="true">☰</span>
+                <span class="hidden sm:inline">Filter</span>
+              </button>
+              <div class="inline-flex rounded-lg bg-white p-1 ring-1 ring-black/10 sm:rounded-2xl" role="group" aria-label="Mode tampilan hasil">
+                <button id="viewModeCard" type="button" class="rounded-lg bg-slate-900 px-2 py-1 text-xs font-semibold text-white shadow-sm sm:rounded-xl sm:px-3 sm:py-2" aria-pressed="true">Ringkas</button>
+                <button id="viewModeList" type="button" class="rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 sm:rounded-xl sm:px-3 sm:py-2" aria-pressed="false">Detail</button>
+              </div>
+            </div>
+          </div>
+
+          <div id="cardList" class="space-y-2"></div>
+          <div id="paginationContainer" class="mt-4 flex flex-wrap items-center justify-center gap-1 sm:mt-6 sm:gap-2"></div>
+        </div>
+
+        <aside class="space-y-4">
+          <section class="rounded-3xl bg-ink p-5 text-white shadow-soft">
+            <div class="text-xs uppercase tracking-[0.24em] text-white/60">Panduan UI</div>
+            <h3 class="mt-2 text-2xl font-black">Mobile-first, one-hand friendly</h3>
+            <p class="mt-3 text-sm leading-6 text-white/80">Filter di bagian atas, hasil kartu yang mudah ditap, dan drawer verifikasi di bagian bawah layar untuk petugas lapangan.</p>
+            <div class="mt-4 grid grid-cols-2 gap-3 text-xs text-white/75">
+              <div class="rounded-2xl bg-white/10 p-3">Dropdown berjenjang</div>
+              <div class="rounded-2xl bg-white/10 p-3">Status badge jelas</div>
+              <div class="rounded-2xl bg-white/10 p-3">Koordinat normalized</div>
+              <div class="rounded-2xl bg-white/10 p-3">Append-only output</div>
+            </div>
+          </section>
+
+          <section class="rounded-3xl bg-white p-5 shadow-soft ring-1 ring-black/5">
+            <div class="text-xs uppercase tracking-[0.24em] text-slate-500">State frontend</div>
+            <pre id="stateBox" class="mt-3 max-h-80 overflow-auto rounded-2xl bg-slate-950 p-4 text-xs leading-6 text-slate-100 scrollbar-hide"></pre>
+          </section>
+        </aside>
+      </section>
+    </main>
+  </div>
+
+    <div id="filterDrawerBackdrop" class="fixed inset-0 z-40 hidden bg-slate-950/40 backdrop-blur-sm"></div>
+    <aside id="filterDrawer" class="fixed left-0 top-0 z-50 hidden h-full w-full max-w-sm overflow-y-auto bg-white shadow-[0_0_80px_rgba(15,23,42,0.2)] ring-1 ring-black/5" aria-hidden="true" aria-labelledby="filterDrawerTitle" role="dialog">
+      <div class="sticky top-0 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Filter</p>
+            <h3 id="filterDrawerTitle" class="mt-1 text-xl font-black text-ink">Saring data</h3>
+          </div>
+          <button id="closeFilterDrawer" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">Tutup</button>
+        </div>
+      </div>
+      <div class="space-y-3 px-5 py-5">
+        <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
+          <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Sumber</label>
+          <select id="sourceTab" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium outline-none transition focus:border-amber-500 focus:bg-white">
+            <option value="ALL">Semua source</option>
+            <option value="Master_GoogleMaps">Master_GoogleMaps</option>
+            <option value="Master_Tokopedia">Master_Tokopedia</option>
+          </select>
+        </div>
+        <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
+          <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Kecamatan</label>
+          <select id="kecamatan" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium outline-none transition focus:border-amber-500 focus:bg-white">
+            <option value="">Semua kecamatan</option>
+          </select>
+        </div>
+        <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
+          <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Desa</label>
+          <select id="desa" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium outline-none transition focus:border-amber-500 focus:bg-white">
+            <option value="">Semua desa</option>
+          </select>
+        </div>
+        <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
+          <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status</label>
+          <select id="matchStatus" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium outline-none transition focus:border-amber-500 focus:bg-white">
+            <option value="ALL">Semua status</option>
+            <option value="MATCH">MATCH</option>
+            <option value="NOT_MATCH">NOT_MATCH</option>
+          </select>
+        </div>
+      </div>
+    </aside>
+
+    <div id="drawerBackdrop" class="fixed inset-0 z-40 hidden bg-slate-950/50 backdrop-blur-sm"></div>
+  <div id="drawer" class="fixed inset-x-0 bottom-0 z-50 hidden rounded-t-[2rem] bg-white shadow-[0_-20px_60px_rgba(15,23,42,0.22)] ring-1 ring-black/5">
+    <div class="mx-auto max-w-3xl px-4 pb-6 pt-3 sm:px-6">
+      <div class="mx-auto mb-4 h-1.5 w-14 rounded-full bg-slate-200"></div>
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <div class="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">Verifikasi</div>
+          <h3 id="drawerTitle" class="mt-1 text-xl font-black">Pilih kartu untuk verifikasi</h3>
+          <p id="drawerSubtitle" class="mt-1 text-sm text-slate-600">Informasi detail akan muncul di sini.</p>
+        </div>
+        <button id="closeDrawer" class="rounded-full bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">Tutup</button>
+      </div>
+
+      <div class="mt-5 grid gap-4 md:grid-cols-[1.1fr_0.9fr]">
+        <div class="space-y-3">
+          <div class="rounded-2xl bg-slate-50 p-4 ring-1 ring-black/5">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Detail lokasi</div>
+            <div id="drawerDetails" class="mt-2 space-y-1 text-sm text-slate-700"></div>
+          </div>
+          <div class="rounded-2xl bg-slate-50 p-4 ring-1 ring-black/5">
+            <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Payload append</div>
+            <pre class="mt-2 overflow-auto rounded-xl bg-slate-950 p-3 text-[11px] leading-5 text-slate-100 scrollbar-hide">lihat schema/verification_append_payload.md</pre>
+          </div>
+        </div>
+        <form class="space-y-3 rounded-2xl bg-amber-50 p-4 ring-1 ring-amber-200">
+          <label class="block text-xs font-semibold uppercase tracking-[0.2em] text-amber-900">Status verifikasi</label>
+          <select class="w-full rounded-xl border border-amber-200 bg-white px-3 py-3 text-sm outline-none focus:border-amber-500">
+            <option>MATCH</option>
+            <option>NOT_MATCH</option>
+            <option>NEED_REVIEW</option>
+            <option>DUPLICATE</option>
+          </select>
+          <label class="block text-xs font-semibold uppercase tracking-[0.2em] text-amber-900">Catatan petugas</label>
+          <textarea rows="5" class="w-full rounded-2xl border border-amber-200 bg-white px-3 py-3 text-sm outline-none focus:border-amber-500" placeholder="Tulis catatan lapangan..."></textarea>
+          <div class="grid grid-cols-2 gap-3">
+            <input class="rounded-xl border border-amber-200 bg-white px-3 py-3 text-sm outline-none focus:border-amber-500" placeholder="Nama petugas" />
+            <input class="rounded-xl border border-amber-200 bg-white px-3 py-3 text-sm outline-none focus:border-amber-500" placeholder="ID petugas" />
+          </div>
+          <button type="button" class="w-full rounded-2xl bg-forest px-4 py-3 text-sm font-bold text-white shadow-soft">Simpan Verifikasi</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const embeddedSeed = {"meta": {"source_file": "Data UMKM Online Shop Kabupaten Mojokerto.xlsx", "generated_at": "2026-05-07T15:27:30", "ui_ready": true, "sheets": ["Master_GoogleMaps", "Master_Tokopedia", "Hasil_Verifikasi"], "total_rows": 3458, "googlemaps_rows": 143, "tokopedia_rows": 3315, "kecamatan_count": 18, "desa_count_total": 291, "matched_true": 678, "matched_false": 2779}, "filters": {"kecamatan": ["BANGSAL", "DAWAR BLANDONG", "DLANGGU", "GEDEK", "GONDANG", "JATIREJO", "JETIS", "KEMLAGI", "KUTOREJO", "MOJOANYAR", "MOJOSARI", "NGORO", "PACET", "PUNGGING", "PURI", "SOOKO", "TRAWAS", "TROWULAN"], "desa_by_kecamatan": {"NGORO": ["BANDARASRI", "CANDIHARJO", "JASEM", "KEMBANGSRI", "KESEMEN", "KUNJOROWESI", "KUTOGIRANG", "LOLAWANG", "MANDUROMANGGUNGGAJA", "NGORO", "PURWOJATI", "SEDATI", "SRIGADING", "SUKOANYAR", "TAMBAKREJO", "TANJANGRONO", "WATESNEGORO", "WONOSARI", "WOTANMASJEDONG"], "PURI": ["BALONGMOJO", "BANJARAGUNG", "BRAYUNG", "KEBONAGUNG", "KENANTEN", "KETEMASDUNGUS", "KINTELAN", "MEDALI", "MLATEN", "PLOSOSARI", "PURI", "SUMBERGIRANG", "SUMOLAWANG", "TAMBAKAGUNG", "TAMPUNGREJO", "TANGUNAN"], "PUNGGING": ["BALONGMASIN", "BANGUN", "BANJARTANGGUL", "CURAHMOJO", "JABONTEGAL", "JATILANGKUNG", "KALIPURO", "KEMBANGRINGGIT", "LEBAKSONO", "MOJOREJO", "NGRAME", "PUNGGING", "PURWOREJO", "RANDUHARJO", "SEKARGADUNG", "TEMPURAN", "TUNGGALPAGER", "WATUKENONGO"], "SOOKO": ["BLIMBINGSARI", "BRANGKAL", "GEMEKAN", "JAMPIROGO", "JAPAN", "KARANGKEDAWANG", "KEDUNGMALING", "KLINTEREJO", "MODONGAN", "MOJORANU", "NGINGASREMBYONG", "SAMBIROTO", "SOOKO", "TEMPURAN", "WRINGINREJO"], "GONDANG": ["BAKALAN", "BEGAGANLIMO", "BENING", "CENTONG", "GONDANG", "JATIDUKUH", "KARANGKUTEN", "KEBONTUNGGUL", "KEMASANTANI", "PADI", "POHJEJER", "PUGERAN", "TAWAR", "WONOPLOSO"], "KEMLAGI": ["BERATKULON", "BETRO", "JAPANAN", "KEDUNGSARI", "KEMLAGI", "MOJODADI", "MOJODOWO", "MOJOGEBANG", "MOJOJAJAR", "MOJOKUMPUL", "MOJOKUSUMO", "MOJOPILANG", "MOJOREJO", "MOJOSARIREJO", "MOJOWATESREJO", "MOJOWIRYO", "MOJOWONO", "PANDANKRAJAN", "TANJUNGAN", "WATESPROJO"], "MOJOANYAR": ["GAYAMAN", "GEBANG MALANG", "JABON", "JUMENENG", "KEPUH ANYAR", "KWATU", "KWEDEN KEMBAR", "LENGKONG", "NGARJO", "SADAR TENGAH", "SUMBER JATI", "WUNUT"], "JETIS": ["BANJARSARI", "BENDUNG", "CANGGU", "JETIS", "JOLOTUNDO", "KUPANG", "LAKARDOWO", "MLIRIP", "MOJOLEBAK", "MOJOREJO", "NGABAR", "PARINGAN", "PENOMPO", "PERNING", "SAWO", "SIDOREJO"], "TROWULAN": ["BALONGWONO", "BEJIJONG", "BELOH", "BICAK", "DOMAS", "JAMBUWOK", "JATIPASAR", "KEJAGAN", "PAKIS", "PANGGIH", "SENTONOREJO", "TAWANGSARI", "TEMON", "TROWULAN", "WATESUMPAK", "WONOREJO"], "MOJOSARI": ["AWANG AWANG", "BELAHANTENGAH", "JOTANGAN", "KAUMAN", "KEBONDALEM", "KEDUNGGEMPOL", "LEMINGGIR", "MENANGGAL", "MODOPURO", "MOJOSARI", "MOJOSULUR", "NGIMBANGAN", "PEKUKUHAN", "RANDUBANGO", "SARIREJO", "SAWAHAN", "SEDURI", "SUMBERTANGGUL", "WONOKUSUMO"], "DAWAR BLANDONG": ["BANGERAN", "BANYULEGI", "BRAYUBLANDONG", "CENDORO", "DAWARBLANDONG", "GUNUNGAN", "GUNUNGSARI", "JATIROWO", "MADURESO", "PUCUK", "PULOREJO", "RANDEGAN", "SIMONGAGROK", "SUMBERWULUH", "TALUNBLANDONG", "TEMUIRENG"], "DLANGGU": ["DLANGGU", "JRAMBE", "KALEN", "KEDUNGGEDE", "KEDUNGLENGKONG", "MOJOKARANG", "NGEMBEH", "POHKECIK", "PUNGGUL", "RANDUGENENGAN", "SAMBILAWANG", "SEGUNUNG", "SUMBERKARANG", "SUMBERSONO", "TALOK", "TUMAPEL"], "GEDEK": ["BALONGSARI", "BANDUNG", "BATANKRAJAN", "BERATWETAN", "GEDEK", "GEMBONGAN", "GEMPOLKREP", "JERUKSEGER", "KEMANTREN", "NGARESKIDUL", "PAGERJO", "PAGERLUYUNG", "SIDOHARJO", "TERUSAN"], "KUTOREJO": ["GEDANGAN", "JIYU", "KALIGORO", "KARANGASEM", "KARANGDIYENG", "KEPUHARUM", "KEPUHPANDAK", "KERTOSARI", "KUTOREJO", "PAYUNGREJO", "PESANGGRAHAN", "SAMPANGAGUNG", "SAWO", "SIMBARINGIN", "SINGOWANGI", "WINDUREJO", "WONODADI"], "JATIREJO": ["BAURENO", "BLEBERAN", "DINOYO", "DUKUHNGARJO", "GADING", "GEBANGSARI", "JATIREJO", "KARANGJERUK", "KUMITIR", "LEBAKJABUNG", "MANTING", "MOJOGENENG", "PADANGASRI", "REJOSARI", "SUMBERAGUNG", "SUMBERJATI", "SUMENGKO", "TAWANGREJO"], "BANGSAL": ["BANGSAL", "GAYAM", "KEDUNGUNENG", "KUTOPORONG", "MEJOYO", "MOJOTAMPING", "NGASTEMI", "NGROWO", "PACING", "PEKUWON", "PETERONGAN", "PULONITI", "SIDOMULYO", "SUMBERTEBU", "SUMBERWONO"], "TRAWAS": ["DUYUNG", "JATIJEJER", "KESIMAN", "KETAPANRAME", "PENANGGUNGAN", "SELOLIMAN", "SELOTAPAK", "SUGENG", "SUKOSARI", "TAMIAJENG", "TRAWAS"], "PACET": ["BENDUNGANJATI", "CANDIWATU", "CEMBOR", "CEPOKOLIMO", "CLAKET", "KEMBANGBELOR", "KEMIRI", "KESIMANTENGAH", "KURIPANSARI", "NOGOSARI", "PACET", "PADUSAN", "PANDANARUM", "PETAK", "SAJEN", "SUMBERKEMBAR", "TANJUNGKENONGO", "WARUGUNUNG", "WIYU"]}}, "ui_state_shape": {"selected_source_tab": "Master_GoogleMaps | Master_Tokopedia | ALL", "selected_kecamatan": "string | null", "selected_desa": "string | null", "search_query": "string | null", "match_status": "MATCH | NOT_MATCH | ALL", "cards": "array of business card objects", "verification_payload": "see schema/verification_append_payload.md"}, "preview_cards": [{"source_tab": "Master_GoogleMaps", "id_scraping": "gmaps_1", "nama_usaha_sumber": "Acosys Program Kasir dan Akuntansi", "kategori_sumber": "Software Development", "subkategori_sumber": "Perusahaan Software", "nmkec": "NGORO", "nmdesa": "WONOSARI", "nmsls": "RT 001 RW 003 DUSUN WONOSARI", "is_matched": true, "match_status": "MATCH", "source_latitude_normalized": -7.5631009, "source_longitude_normalized": 112.6336362, "match_idsbr": 33268085, "match_nama_usaha": "ACOSYS PROGRAM KASIR DAN AKUNTANSI", "similarity_score": 100, "jarak_km": 68, "keterangan": "Match nama + lokasi"}, {"source_tab": "Master_GoogleMaps", "id_scraping": "gmaps_2", "nama_usaha_sumber": "Jasa Desain dan Teknologi", "kategori_sumber": "Software Development", "subkategori_sumber": "Perusahaan Software", "nmkec": "PURI", "nmdesa": "KINTELAN", "nmsls": "RT 001 RW 002 DUSUN KERTOHARJO", "is_matched": false, "match_status": "NOT_MATCH", "source_latitude_normalized": -7.5348682, "source_longitude_normalized": 112.4313, "match_idsbr": 33630410, "match_nama_usaha": "jasa les", "similarity_score": "2026-08-22T00:00:00", "jarak_km": 595, "keterangan": null}, {"source_tab": "Master_GoogleMaps", "id_scraping": "gmaps_3", "nama_usaha_sumber": "SehatnoDev Software Development", "kategori_sumber": "Software Development", "subkategori_sumber": "Toko Software Komputer", "nmkec": "PURI", "nmdesa": "BANJARAGUNG", "nmsls": "RT 001 RW 011 DUSUN BRONGKOL", "is_matched": true, "match_status": "MATCH", "source_latitude_normalized": -7.4922123, "source_longitude_normalized": 112.4344431, "match_idsbr": 33272833, "match_nama_usaha": "SEHATNODEV SOFTWARE DEVELOPMENT", "similarity_score": 100, "jarak_km": 0, "keterangan": "Match nama + lokasi"}, {"source_tab": "Master_GoogleMaps", "id_scraping": "gmaps_4", "nama_usaha_sumber": "Mojokerto Hosting", "kategori_sumber": "Software Development", "subkategori_sumber": "Layanan Web Hosting", "nmkec": "PURI", "nmdesa": "TANGUNAN", "nmsls": "RT 012 RW 006 DUSUN BERTUGU", "is_matched": true, "match_status": "MATCH", "source_latitude_normalized": -7.5492128, "source_longitude_normalized": 112.4729452, "match_idsbr": 33283600, "match_nama_usaha": "MOJOKERTO HOSTING", "similarity_score": 100, "jarak_km": 0, "keterangan": "Match nama + lokasi"}, {"source_tab": "Master_GoogleMaps", "id_scraping": "gmaps_5", "nama_usaha_sumber": "FS STORE", "kategori_sumber": "Software Development", "subkategori_sumber": "Toko Elektronik", "nmkec": "PUNGGING", "nmdesa": "PURWOREJO", "nmsls": "RT 014 RW 002 DUSUN PURWOREJO", "is_matched": true, "match_status": "MATCH", "source_latitude_normalized": -7.5892003, "source_longitude_normalized": 112.5586099, "match_idsbr": 33259541, "match_nama_usaha": "FS STORE", "similarity_score": 100, "jarak_km": 0, "keterangan": "Match nama + lokasi"}, {"source_tab": "Master_Tokopedia", "id_scraping": "tokped1", "nama_usaha_sumber": "MARIE OS", "kategori_sumber": null, "subkategori_sumber": null, "nmkec": null, "nmdesa": null, "nmsls": null, "is_matched": false, "match_status": "NOT_MATCH", "source_latitude_normalized": null, "source_longitude_normalized": null, "match_idsbr": 57066490, "match_nama_usaha": "MEBEL ARIE <ARIE WIJAYA>", "similarity_score": "45.75", "jarak_km": null, "keterangan": "Tidak ada kecocokan nama yang memadai"}, {"source_tab": "Master_Tokopedia", "id_scraping": "tokped2", "nama_usaha_sumber": "Adi Hafeeza", "kategori_sumber": null, "subkategori_sumber": null, "nmkec": null, "nmdesa": null, "nmsls": null, "is_matched": true, "match_status": "MATCH", "source_latitude_normalized": null, "source_longitude_normalized": null, "match_idsbr": 4279639, "match_nama_usaha": "HAFEEZAH", "similarity_score": "80.53", "jarak_km": null, "keterangan": "Match nama (Similarity >= 70%)"}, {"source_tab": "Master_Tokopedia", "id_scraping": "tokped3", "nama_usaha_sumber": "SAKTI NO.1", "kategori_sumber": null, "subkategori_sumber": null, "nmkec": "PURI", "nmdesa": "SUMOLAWANG", "nmsls": "RT 002 RW 009 DUSUN BALONG LOMBOK", "is_matched": false, "match_status": "NOT_MATCH", "source_latitude_normalized": null, "source_longitude_normalized": null, "match_idsbr": 33282268, "match_nama_usaha": "GROSIR TOPI NO.1 MOJOKERTO", "similarity_score": "56.07", "jarak_km": null, "keterangan": "Tidak ada kecocokan nama yang memadai"}, {"source_tab": "Master_Tokopedia", "id_scraping": "tokped4", "nama_usaha_sumber": "7040 cell", "kategori_sumber": null, "subkategori_sumber": null, "nmkec": "KEMLAGI", "nmdesa": "MOJOSARIREJO", "nmsls": "RT 007 RW 003 DUSUN PUDO", "is_matched": false, "match_status": "NOT_MATCH", "source_latitude_normalized": null, "source_longitude_normalized": null, "match_idsbr": 33623321, "match_nama_usaha": "cell", "similarity_score": "46.47", "jarak_km": null, "keterangan": "Tidak ada kecocokan nama yang memadai"}, {"source_tab": "Master_Tokopedia", "id_scraping": "tokped5", "nama_usaha_sumber": "BUDI-id", "kategori_sumber": null, "subkategori_sumber": null, "nmkec": "TROWULAN", "nmdesa": "BEJIJONG", "nmsls": "RT 002 RW 001 DUSUN KEDUNGWULAN", "is_matched": false, "match_status": "NOT_MATCH", "source_latitude_normalized": null, "source_longitude_normalized": null, "match_idsbr": 26762149, "match_nama_usaha": "BUDI", "similarity_score": "35.73", "jarak_km": null, "keterangan": "Tidak ada kecocokan nama yang memadai"}]};
+    let seedFromFile = window.__UMKM_UI__ || embeddedSeed;
+    let allCards = seedFromFile.cards || seedFromFile.preview_cards || [];
+    let desaByKecamatan = seedFromFile.filters.desa_by_kecamatan;
+    let kecamatanOptions = seedFromFile.filters.kecamatan;
+
+    const els = {
+      sourceTab: document.getElementById('sourceTab'),
+      kecamatan: document.getElementById('kecamatan'),
+      desa: document.getElementById('desa'),
+      matchStatus: document.getElementById('matchStatus'),
+      openFilterDrawer: document.getElementById('openFilterDrawer'),
+      cardList: document.getElementById('cardList'),
+      resultCount: document.getElementById('resultCount'),
+      resultMeta: document.getElementById('resultMeta'),
+      stateBox: document.getElementById('stateBox'),
+      drawer: document.getElementById('drawer'),
+      filterDrawer: document.getElementById('filterDrawer'),
+      filterDrawerBackdrop: document.getElementById('filterDrawerBackdrop'),
+      closeFilterDrawer: document.getElementById('closeFilterDrawer'),
+      drawerBackdrop: document.getElementById('drawerBackdrop'),
+      drawerTitle: document.getElementById('drawerTitle'),
+      drawerSubtitle: document.getElementById('drawerSubtitle'),
+      drawerDetails: document.getElementById('drawerDetails'),
+      closeDrawer: document.getElementById('closeDrawer'),
+      viewModeCard: document.getElementById('viewModeCard'),
+      viewModeList: document.getElementById('viewModeList'),
+    };
+
+    const state = {
+      selectedSourceTab: 'ALL',
+      selectedKecamatan: '',
+      selectedDesa: '',
+      matchStatus: 'ALL',
+      viewMode: 'card',
+      selectedCard: null,
+      currentPage: 1,
+      itemsPerPage: 10,
+    };
+
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, (m) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function getFilteredCards() {
+      return allCards.filter((card) => {
+        if (state.selectedSourceTab !== 'ALL' && card.source_tab !== state.selectedSourceTab) return false;
+        if (state.selectedKecamatan && card.nmkec !== state.selectedKecamatan) return false;
+        if (state.selectedDesa && card.nmdesa !== state.selectedDesa) return false;
+        if (state.matchStatus !== 'ALL' && card.match_status !== state.matchStatus) return false;
+        return true;
+      });
+    }
+
+    function renderDesaOptions() {
+      const kec = state.selectedKecamatan;
+      const desa = kec ? (desaByKecamatan[kec] || []) : [];
+      els.desa.innerHTML = '<option value="">Semua desa</option>' + desa.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`).join('');
+      if (state.selectedDesa && !desa.includes(state.selectedDesa)) {
+        state.selectedDesa = '';
+        els.desa.value = '';
+      }
+    }
+
+    function renderKecamatanOptions() {
+      const options = ['<option value="">Semua kecamatan</option>']
+        .concat(kecamatanOptions.map((item) => `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`));
+      els.kecamatan.innerHTML = options.join('');
+      els.kecamatan.value = state.selectedKecamatan;
+    }
+
+    function openDrawer(card) {
+      state.selectedCard = card;
+      els.drawerTitle.textContent = card.nama_usaha_sumber || card.match_nama_usaha || 'Rincian data';
+      els.drawerSubtitle.textContent = `${card.source_tab} • ${card.nmkec || '-'} / ${card.nmdesa || '-'}`;
+      els.drawerDetails.innerHTML = `
+        <div><span class="font-semibold">ID:</span> ${escapeHtml(card.id_scraping)}</div>
+        <div><span class="font-semibold">Kategori:</span> ${escapeHtml(card.kategori_sumber || card.kategori_jual || '-')}</div>
+        <div><span class="font-semibold">Status:</span> ${escapeHtml(card.match_status)}</div>
+        <div><span class="font-semibold">Koordinat:</span> ${card.source_latitude_normalized ?? '-'}, ${card.source_longitude_normalized ?? '-'}</div>
+      `;
+      els.drawer.classList.remove('hidden');
+      els.drawerBackdrop.classList.remove('hidden');
+    }
+
+    function closeDrawer() {
+      els.drawer.classList.add('hidden');
+      els.drawerBackdrop.classList.add('hidden');
+    }
+
+    function openFilterDrawer() {
+      els.filterDrawer.classList.remove('hidden');
+      els.filterDrawerBackdrop.classList.remove('hidden');
+    }
+
+    function closeFilterDrawer() {
+      els.filterDrawer.classList.add('hidden');
+      els.filterDrawerBackdrop.classList.add('hidden');
+    }
+
+    function renderCards() {
+      const allFilteredCards = getFilteredCards();
+      state.currentPage = 1;
+      
+      // Apply view mode styling
+      if (state.viewMode === 'list') {
+        els.cardList.className = 'space-y-2';
+        els.viewModeCard.className = 'rounded-xl px-3 py-2 text-xs font-semibold text-slate-700';
+        els.viewModeList.className = 'rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm';
+        els.viewModeCard.setAttribute('aria-pressed', 'false');
+        els.viewModeList.setAttribute('aria-pressed', 'true');
+      } else {
+        els.cardList.className = 'space-y-2';
+        els.viewModeCard.className = 'rounded-xl bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm';
+        els.viewModeList.className = 'rounded-xl px-3 py-2 text-xs font-semibold text-slate-700';
+        els.viewModeCard.setAttribute('aria-pressed', 'true');
+        els.viewModeList.setAttribute('aria-pressed', 'false');
+      }
+
+      // Calculate pagination
+      const totalItems = allFilteredCards.length;
+      const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+      const startIdx = (state.currentPage - 1) * state.itemsPerPage;
+      const endIdx = startIdx + state.itemsPerPage;
+      const paginatedCards = allFilteredCards.slice(startIdx, endIdx);
+      
+      els.resultMeta.textContent = `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`;
+      
+      els.cardList.innerHTML = paginatedCards.map((card) => `
+        <article class="rounded-lg bg-white px-3 py-2 ring-1 ring-black/5 sm:rounded-2xl sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
+          <div class="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div class="min-w-0 flex-1">
+              <div class="flex flex-wrap items-center gap-1 text-xs font-semibold text-slate-500 sm:gap-2">
+                <span class="rounded-full px-1.5 py-0.5 uppercase tracking-[0.18em] ${card.match_status === 'MATCH' ? 'bg-forest text-white' : 'bg-rust text-white'} sm:px-2 sm:py-1">${card.match_status}</span>
+                <span class="text-xs sm:text-sm">${escapeHtml(card.source_tab)}</span>
+                <span>•</span>
+                <span class="text-xs sm:text-sm">${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')}</span>
+              </div>
+              <h3 class="mt-1 truncate text-sm font-semibold text-ink sm:mt-2 sm:text-base">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</h3>
+              <p class="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || card.keterangan || '-')}</p>
+            </div>
+            <button type="button" class="self-start rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 sm:self-center sm:rounded-full sm:px-3 sm:py-2 sm:text-sm">Detail</button>
+          </div>
+        </article>
+      `).join('');
+
+      // Attach click handlers for detail open on list items
+      els.cardList.querySelectorAll('article').forEach((article, index) => {
+        article.addEventListener('click', () => openDrawer(paginatedCards[index]));
+        const btn = article.querySelector('button');
+        if (btn) btn.addEventListener('click', (event) => { event.stopPropagation(); openDrawer(paginatedCards[index]); });
+      });
+      
+      renderPagination(totalPages, totalItems);
+
+      els.stateBox.textContent = JSON.stringify({
+        selectedSourceTab: state.selectedSourceTab,
+        selectedKecamatan: state.selectedKecamatan || null,
+        selectedDesa: state.selectedDesa || null,
+        matchStatus: state.matchStatus,
+        visibleCards: paginatedCards.length,
+        currentPage: state.currentPage,
+        totalPages: totalPages,
+        selectedCard: state.selectedCard ? state.selectedCard.id_scraping : null,
+      }, null, 2);
+    }
+
+    function renderPagination(totalPages, totalItems) {
+      const paginationContainer = document.getElementById('paginationContainer');
+      if (!paginationContainer || totalPages <= 1) {
+        if (paginationContainer) paginationContainer.innerHTML = '';
+        return;
+      }
+      
+      let html = '';
+      const isMobile = window.innerWidth < 640;
+      
+      // Previous button
+      if (state.currentPage > 1) {
+        html += `<button type="button" class="rounded px-2 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">←</button>`;
+      } else {
+        html += `<button type="button" disabled class="rounded px-2 py-1 text-xs font-semibold text-slate-400 bg-slate-50 cursor-not-allowed sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">←</button>`;
+      }
+      
+      // Page numbers - simplified for mobile
+      if (isMobile) {
+        // Show current page and nearby pages only on mobile
+        const start = Math.max(1, state.currentPage - 1);
+        const end = Math.min(totalPages, state.currentPage + 1);
+        for (let i = start; i <= end; i++) {
+          if (i === state.currentPage) {
+            html += `<button type="button" disabled class="rounded px-2 py-1 text-xs font-semibold text-white bg-slate-900 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">${i}</button>`;
+          } else {
+            html += `<button type="button" class="rounded px-2 py-1 text-xs font-semibold text-slate-700 bg-white ring-1 ring-slate-200 hover:bg-slate-50 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">${i}</button>`;
+          }
+        }
+        if (end < totalPages) {
+          html += `<span class="text-xs text-slate-400 sm:text-sm">…</span>`;
+        }
+      } else {
+        // Show full pagination on desktop
+        for (let i = 1; i <= totalPages; i++) {
+          if (i === state.currentPage) {
+            html += `<button type="button" disabled class="rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white">${i}</button>`;
+          } else if (i <= 3 || i > totalPages - 3 || (i >= state.currentPage - 1 && i <= state.currentPage + 1)) {
+            html += `<button type="button" class="rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">${i}</button>`;
+          } else if (i === 4 || i === totalPages - 3) {
+            html += `<span class="text-slate-400">…</span>`;
+          }
+        }
+      }
+      
+      // Next button
+      if (state.currentPage < totalPages) {
+        html += `<button type="button" class="rounded px-2 py-1 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">→</button>`;
+      } else {
+        html += `<button type="button" disabled class="rounded px-2 py-1 text-xs font-semibold text-slate-400 bg-slate-50 cursor-not-allowed sm:rounded-lg sm:px-3 sm:py-2 sm:text-sm">→</button>`;
+      }
+      
+      paginationContainer.innerHTML = html;
+      
+      // Attach event listeners
+      paginationContainer.querySelectorAll('button:not([disabled])').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const text = btn.textContent.trim();
+          if (text === '←') {
+            state.currentPage = Math.max(1, state.currentPage - 1);
+          } else if (text === '→') {
+            state.currentPage = Math.min(totalPages, state.currentPage + 1);
+          } else {
+            const pageNum = parseInt(text, 10);
+            if (!isNaN(pageNum)) {
+              state.currentPage = pageNum;
+            }
+          }
+          renderCards();
+          // Scroll to top of list
+          els.cardList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
+      } else {
+        html += `<button type="button" disabled class="rounded-lg bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-400 cursor-not-allowed">Selanjutnya →</button>`;
+      }
+      
+      paginationContainer.innerHTML = html;
+      
+      // Attach event listeners
+      paginationContainer.querySelectorAll('button:not([disabled])').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const text = btn.textContent.trim();
+          if (text === '← Sebelumnya') {
+            state.currentPage = Math.max(1, state.currentPage - 1);
+          } else if (text === 'Selanjutnya →') {
+            state.currentPage = Math.min(totalPages, state.currentPage + 1);
+          } else {
+            const pageNum = parseInt(text, 10);
+            if (!isNaN(pageNum)) {
+              state.currentPage = pageNum;
+            }
+          }
+          renderCards();
+          els.cardList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+      });
+    }
+
+    els.sourceTab.addEventListener('change', (e) => { state.selectedSourceTab = e.target.value; renderCards(); });
+    els.kecamatan.addEventListener('change', (e) => { state.selectedKecamatan = e.target.value; renderDesaOptions(); renderCards(); });
+    els.desa.addEventListener('change', (e) => { state.selectedDesa = e.target.value; renderCards(); });
+    els.matchStatus.addEventListener('change', (e) => { state.matchStatus = e.target.value; renderCards(); });
+    els.viewModeCard.addEventListener('click', () => { state.viewMode = 'card'; renderCards(); });
+    els.viewModeList.addEventListener('click', () => { state.viewMode = 'list'; renderCards(); });
+    els.openFilterDrawer.addEventListener('click', openFilterDrawer);
+    els.closeFilterDrawer.addEventListener('click', closeFilterDrawer);
+    els.filterDrawerBackdrop.addEventListener('click', closeFilterDrawer);
+    // search input removed — results update automatically via filter change
+    els.closeDrawer.addEventListener('click', closeDrawer);
+    els.drawerBackdrop.addEventListener('click', closeDrawer);
+
+    renderKecamatanOptions();
+    renderDesaOptions();
+    renderCards();
+
+    fetch('./ui_seed_data.json', { cache: 'no-store' })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((seed) => {
+        if (!seed) return;
+        seedFromFile = seed;
+        allCards = seed.cards || seed.preview_cards || allCards;
+        desaByKecamatan = seed.filters?.desa_by_kecamatan || desaByKecamatan;
+        kecamatanOptions = seed.filters?.kecamatan || kecamatanOptions;
+        renderKecamatanOptions();
+        renderDesaOptions();
+        renderCards();
+      })
+      .catch(() => {});
+  </script>
+</body>
+</html>
