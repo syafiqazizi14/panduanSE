@@ -10,7 +10,7 @@
 
 @section('content')
   <div class="min-h-screen pb-24">
-    <header class="relative overflow-hidden border-b border-black/5 bg-white/60 backdrop-blur-xl">
+    <header class="relative overflow-hidden">
       <div class="absolute inset-0 grain opacity-30"></div>
       <div class="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
