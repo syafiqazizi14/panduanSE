@@ -3,6 +3,8 @@
 use App\Http\Controllers\Umkm\VerificationController;
 use Illuminate\Support\Facades\Route;
 
+Route::redirect('/', '/panduanSE/usaha-umkm');
+
 // Public list-only route under /panduanSE
 Route::get('/panduanSE/usaha-umkm', [VerificationController::class, 'index'])
     ->name('panduanSE.usaha_umkm');

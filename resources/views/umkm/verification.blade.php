@@ -15,7 +15,6 @@
       <div class="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
-            <img src="{{ asset('assets/Logo BPS Baru 2.png') }}" alt="Logo BPS Mojokerto" class="h-8 sm:h-10">
             <h1 class="mt-2 text-xl font-black tracking-tight text-ink sm:mt-3 sm:text-4xl">Verifikasi UMKM Lapangan</h1>
             <p class="mt-1 max-w-2xl text-xs leading-6 text-slate-600 sm:mt-2 sm:text-base">Filter data master dari Google Maps dan Tokopedia, lalu pilih usaha yang akan diverifikasi petugas di lapangan.</p>
           </div>
@@ -442,23 +441,37 @@
       const paginatedCards = allFilteredCards.slice(startIdx, endIdx);
       
       els.resultMeta.textContent = `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`;
-      els.cardList.innerHTML = paginatedCards.map((card) => `
-        <article class="rounded-lg bg-white px-3 py-2 ring-1 ring-black/5 sm:rounded-2xl sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
-          <div class="flex flex-col gap-2 sm:gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div class="min-w-0 flex-1">
-              <div class="flex flex-wrap items-center gap-1 text-xs font-semibold text-slate-500 sm:gap-2">
-                <span class="rounded-full px-1.5 py-0.5 uppercase tracking-[0.18em] ${card.match_status === 'MATCH' ? 'bg-forest text-white' : 'bg-rust text-white'} sm:px-2 sm:py-1">${card.match_status}</span>
-                <span class="text-xs sm:text-sm">${escapeHtml(card.source_tab)}</span>
-                <span>•</span>
-                <span class="text-xs sm:text-sm">${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')}</span>
-              </div>
-              <h3 class="mt-1 truncate text-sm font-semibold text-ink sm:mt-2 sm:text-base">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</h3>
-              <p class="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || card.keterangan || '-')}</p>
-            </div>
-            <button type="button" class="self-start rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 sm:self-center sm:rounded-full sm:px-3 sm:py-2 sm:text-sm">Detail</button>
+    }
+
+    function formatCoordinates(lat, lon) {
+      const n = normalizeCoords(lat, lon);
+      if (!n) return '';
+      return `${n.lat.toFixed(6)}, ${n.lon.toFixed(6)}`;
+    }
+
+    function getGoogleMapsUrl(lat, lon) {
+      const n = normalizeCoords(lat, lon);
+      if (!n) return null;
+      return `https://www.google.com/maps/search/${n.lat.toFixed(6)},${n.lon.toFixed(6)}`;
+    }
+
+    els.cardList.innerHTML = paginatedCards.map((card) => {
+      const coordStr = formatCoordinates(card.source_latitude, card.source_longitude);
+      const mapsUrl = getGoogleMapsUrl(card.source_latitude, card.source_longitude);
+      const nameHtml = mapsUrl ?
+        `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 hover:text-blue-800 underline">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</a>` :
+        `<span class="font-semibold">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</span>`;
+
+      return `
+        <article class="w-full rounded-2xl bg-white/85 px-3 py-3 shadow-sm ring-1 ring-black/5 transition hover:bg-white sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
+          <div class="space-y-1.5">
+            <h3 class="truncate text-sm font-semibold text-ink sm:text-base">${nameHtml}</h3>
+            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || card.keterangan || '-')}</p>
+            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}</p>
+            ${coordStr ? `<p class="text-xs text-slate-500 sm:text-sm">${coordStr}</p>` : ''}
           </div>
         </article>
-      `).join('');
+      `}).join('');
 
       els.cardList.querySelectorAll('article').forEach((article, index) => {
         article.addEventListener('click', () => openDrawer(paginatedCards[index]));
@@ -467,11 +480,6 @@
             event.preventDefault();
             openDrawer(paginatedCards[index]);
           }
-        });
-        const button = article.querySelector('button');
-        if (button) button.addEventListener('click', (event) => {
-          event.stopPropagation();
-          openDrawer(paginatedCards[index]);
         });
       });
       

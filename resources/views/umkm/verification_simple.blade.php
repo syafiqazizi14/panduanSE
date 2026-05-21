@@ -15,7 +15,6 @@
       <div class="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
-            <img src="{{ asset('assets/Logo BPS Baru 2.png') }}" alt="Logo BPS Mojokerto" class="h-8 sm:h-10">
             <h1 class="mt-2 text-xl font-black tracking-tight text-ink sm:mt-3 sm:text-4xl">Daftar Usaha UMKM</h1>
             <p class="mt-1 max-w-2xl text-xs leading-6 text-slate-600 sm:mt-2 sm:text-base">Daftar lengkap usaha mikro, kecil, dan menengah di Kabupaten Mojokerto dari data Google Maps dan Tokopedia.</p>
           </div>
@@ -271,22 +270,12 @@
           `<span class="font-semibold">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</span>`;
         
         return `
-        <article class="rounded-lg bg-white px-3 py-2 ring-1 ring-black/5 sm:rounded-2xl sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
-          <div class="flex flex-col gap-2 sm:gap-3">
-            <div class="flex items-start justify-between gap-2">
-              <div>
-                <span class="rounded-full px-1.5 py-0.5 uppercase tracking-[0.18em] text-xs sm:text-sm font-semibold ${card.match_status === 'MATCH' ? 'bg-forest text-white' : 'bg-rust text-white'} sm:px-2 sm:py-1">${card.match_status}</span>
-              </div>
-              <span class="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">${escapeHtml(card.source_tab)}</span>
-            </div>
-            <div>
-              <div class="text-sm sm:text-base">${nameHtml}</div>
-              <p class="mt-0.5 text-xs text-slate-600 sm:mt-1 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || '-')}</p>
-            </div>
-            <div class="text-xs text-slate-600 space-y-0.5 sm:text-sm">
-              <div>📍 ${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}</div>
-              ${coordStr ? `<div>🧭 ${coordStr}</div>` : ''}
-            </div>
+        <article class="w-full rounded-2xl bg-white/85 px-3 py-3 shadow-sm ring-1 ring-black/5 transition hover:bg-white sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
+          <div class="space-y-1.5">
+            <div class="text-sm font-semibold text-ink sm:text-base">${nameHtml}</div>
+            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || '-')}</p>
+            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}</p>
+            ${coordStr ? `<p class="text-xs text-slate-500 sm:text-sm">${coordStr}</p>` : ''}
           </div>
         </article>
       `;

@@ -16,7 +16,6 @@
 
       <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <a href="{{ $searchAction }}" class="inline-flex items-center justify-center rounded-2xl bg-forest px-5 py-3 text-sm font-bold text-white shadow-soft">Kembali ke Usaha UMKM</a>
-        <a href="/" class="inline-flex items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 hover:bg-slate-50">Ke Beranda</a>
       </div>
     </section>
   </main>
