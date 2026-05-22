@@ -25,58 +25,6 @@
       }
     }
   </script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function () {
-      const toggle = document.getElementById('searchToggle');
-      const wrap = document.getElementById('globalSearchWrap');
-      const input = document.getElementById('globalSearch');
-      const form = document.getElementById('globalSearchForm');
-      if (!toggle || !wrap) return;
-
-      function showSearch() {
-        wrap.classList.remove('hidden');
-        toggle.classList.add('hidden');
-        setTimeout(() => input && input.focus(), 50);
-      }
-
-      function hideSearch() {
-        wrap.classList.add('hidden');
-        toggle.classList.remove('hidden');
-      }
-
-      toggle.addEventListener('click', () => {
-        if (wrap.classList.contains('hidden')) {
-          showSearch();
-          return;
-        }
-
-        // shouldn't be reachable because toggle is hidden when open,
-        // but keep fallback: submit if has query, otherwise focus
-        const q = input && input.value ? input.value.trim() : '';
-        if (q) {
-          form && form.submit();
-        } else {
-          input && input.focus();
-        }
-      });
-
-      // Click outside the form hides the search input and restores the toggle
-      document.addEventListener('click', (e) => {
-        if (wrap.classList.contains('hidden')) return;
-        const target = e.target;
-        if (!form.contains(target) && !toggle.contains(target)) {
-          hideSearch();
-        }
-      });
-
-      // Escape to close
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !wrap.classList.contains('hidden')) {
-          hideSearch();
-        }
-      });
-    });
-  </script>
   <style>
     :root { color-scheme: light; }
     body {
@@ -92,6 +40,23 @@
     }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    #globalSearchSuggestions {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    #globalSearchSuggestions::-webkit-scrollbar {
+      width: 6px;
+    }
+    #globalSearchSuggestions::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #globalSearchSuggestions::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    #globalSearchSuggestions::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
   </style>
   @stack('styles')
 </head>
@@ -99,29 +64,28 @@
   <a href="#main-content" class="sr-only focus:not-sr-only absolute left-4 top-4 z-50 rounded bg-white px-3 py-2 text-sm font-medium text-ink ring-1 ring-black/5">Skip to content</a>
 
   <nav class="w-full border-b border-black/5 bg-white/90 backdrop-blur-sm">
-    <div class="mx-auto max-w-7xl px-3 py-3 sm:px-6 lg:px-8">
-      <div class="flex flex-wrap items-center gap-3 lg:flex-nowrap lg:items-center lg:justify-start lg:gap-3">
-        <img src="/assets/Logo BPS Baru 2.png" alt="BPS" class="order-1 h-10 w-auto shrink-0 sm:h-12 lg:h-12" />
-        <div class="relative order-2 ml-auto w-full max-w-[220px] sm:max-w-md lg:order-3 lg:ml-auto lg:w-auto lg:max-w-md">
+    <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between gap-4">
+        <div class="flex items-center gap-4 sm:gap-6">
+          <img src="{{ asset('assets/Logo BPS Baru 2.png') }}" alt="Logo BPS Mojokerto" class="h-7 sm:h-9">
+          <a href="/panduanSE/usaha-umkm" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/usaha-umkm' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha UMKM</a>
+          <a href="/panduanSE/usaha-besar" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/usaha-besar' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha Besar</a>
+          <a href="/panduanSE/kbli" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/kbli' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">KBLI</a>
+        </div>
+        <div class="relative ml-auto w-full max-w-lg">
           <form id="globalSearchForm" method="GET" action="/panduanSE/usaha-umkm" class="w-full">
             <label for="globalSearch" class="sr-only">Cari</label>
-            <div class="flex items-center justify-end gap-2">
-              <div id="globalSearchWrap" class="hidden flex-1 min-w-0 items-center gap-2">
-                <input id="globalSearch" name="q" type="search" autocomplete="off" placeholder="Cari usaha, kategori, desa..." class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs outline-none focus:border-amber-500 focus:bg-white sm:text-sm" />
-                <button type="submit" class="shrink-0 rounded-xl bg-forest px-3 py-2 text-xs font-semibold text-white sm:px-4 sm:text-sm">Cari</button>
+            <div class="relative group">
+              <div class="absolute left-0 top-0 bottom-0 flex items-center justify-center w-10 pointer-events-none text-slate-400 group-focus-within:text-forest transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
               </div>
-              <button id="searchToggle" type="button" class="inline-flex shrink-0 items-center justify-center rounded-full bg-white p-1.5 ring-1 ring-slate-200 z-10 sm:p-2">
-                <img src="/assets/search.png" alt="Cari" class="h-4 w-4 sm:h-5 sm:w-5" />
-              </button>
+              <input id="globalSearch" name="q" type="search" autocomplete="off" placeholder="Cari usaha..." class="w-full rounded-2xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-all duration-300 focus:border-forest focus:ring-2 focus:ring-forest/20 hover:border-slate-400" />
+              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5 text-xs font-semibold bg-forest text-white transition-all duration-300 hover:bg-forest/90 active:scale-95">Cari</button>
             </div>
           </form>
-          <div id="globalSearchSuggestions" class="absolute left-0 right-0 top-full z-50 mt-2 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-soft"></div>
-        </div>
-        <div id="navLinks" class="order-3 relative flex w-full basis-full items-center gap-2 overflow-x-auto pb-1 lg:order-2 lg:ml-4 lg:w-auto lg:basis-auto lg:gap-6 lg:overflow-visible lg:pb-0">
-          <div id="navIndicator" class="pointer-events-none absolute rounded-xl border border-forest/10 bg-gradient-to-b from-forest/10 via-forest/6 to-forest/5 shadow-[inset_0_-2px_0_rgba(20,83,45,0.28)] opacity-0 transition-[left,top,width,height,opacity] duration-300 ease-out" style="left:0; top:0; width:0; height:0;"></div>
-          <a href="/panduanSE/usaha-umkm" class="nav-link relative z-10 rounded-lg px-2 py-1 text-sm font-medium text-ink transition-[color,transform,background-color] duration-200 hover:bg-forest/5 hover:text-ink sm:px-0">Usaha UMKM</a>
-          <a href="/panduanSE/usaha-besar" class="nav-link relative z-10 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 transition-[color,transform,background-color] duration-200 hover:bg-forest/5 hover:text-ink sm:px-0">Usaha Besar</a>
-          <a href="/panduanSE/kbli" class="nav-link relative z-10 rounded-lg px-2 py-1 text-sm font-medium text-slate-700 transition-[color,transform,background-color] duration-200 hover:bg-forest/5 hover:text-ink sm:px-0">KBLI</a>
+          <div id="globalSearchSuggestions" class="absolute left-0 right-0 top-full z-50 mt-3 hidden rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
         </div>
       </div>
     </div>
@@ -147,15 +111,17 @@
 
       function renderItems(items, query) {
         if (!items.length) {
-          box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-500">Tidak ada saran untuk "' + escapeHtml(query) + '".</div>';
+          box.innerHTML = '<div class="px-4 py-3 text-sm text-slate-500">Tidak ada hasil untuk "' + escapeHtml(query) + '"</div>';
           box.classList.remove('hidden');
           return;
         }
 
         box.innerHTML = items.map((item) => {
           const label = escapeHtml(item.label || item.value || '');
-          const secondary = escapeHtml(item.secondary || '');
-          return '<button type="button" data-value="' + escapeHtml(item.value || item.label || '') + '" class="block w-full px-4 py-3 text-left hover:bg-slate-50"><div class="text-sm font-semibold text-ink">' + label + '</div>' + (secondary ? '<div class="mt-0.5 text-xs text-slate-500">' + secondary + '</div>' : '') + '</button>';
+          const kategori = escapeHtml(item.kategori || '');
+          const lokasi = escapeHtml(item.lokasi || '');
+          const detail = kategori + (kategori && lokasi ? ' • ' : '') + lokasi;
+          return '<button type="button" data-value="' + escapeHtml(item.value || item.label || '') + '" class="block w-full px-4 py-3 text-left border-b border-slate-100 hover:bg-forest/5 transition-colors"><div class="text-sm font-semibold text-ink">' + label + '</div>' + (detail ? '<div class="mt-1 text-xs text-slate-600 truncate">' + detail + '</div>' : '') + '</button>';
         }).join('');
         box.classList.remove('hidden');
 
@@ -222,132 +188,5 @@
     })();
   </script>
   @stack('scripts')
-  <script>
-    (function () {
-      function initNavIndicator() {
-        const container = document.getElementById('navLinks');
-        const indicator = document.getElementById('navIndicator');
-        if (!container || !indicator) return;
-
-        const links = Array.from(container.querySelectorAll('a.nav-link'));
-        if (!links.length) return;
-
-        function placeIndicator(el, animate = true) {
-          const cRect = container.getBoundingClientRect();
-          const r = el.getBoundingClientRect();
-          const left = Math.round(r.left - cRect.left) - 8;
-          const top = Math.round(r.top - cRect.top) - 6;
-          const width = Math.round(r.width) + 16;
-          const height = Math.round(r.height) + 12;
-
-          indicator.style.transition = animate ? '' : 'none';
-          indicator.style.left = left + 'px';
-          indicator.style.top = top + 'px';
-          indicator.style.width = width + 'px';
-          indicator.style.height = height + 'px';
-          indicator.style.opacity = '1';
-          if (!animate) {
-            requestAnimationFrame(() => {
-              indicator.style.transition = '';
-            });
-          }
-        }
-
-        function setActiveLink(activeLink) {
-          links.forEach((link) => {
-            link.classList.remove('font-bold', 'text-ink');
-            link.classList.add('font-medium', 'text-slate-700');
-          });
-
-          if (activeLink) {
-            activeLink.classList.add('font-bold', 'text-ink');
-            activeLink.classList.remove('font-medium', 'text-slate-700');
-          }
-        }
-
-        function resolveActiveLink() {
-          const currentPath = window.location.pathname.replace(/\/+$/, '');
-          const stored = localStorage.getItem('navActiveHref');
-
-          if (stored) {
-            const storedMatch = links.find((a) => {
-              try {
-                return new URL(a.href, window.location.origin).pathname.replace(/\/+$/, '') === new URL(stored, window.location.origin).pathname.replace(/\/+$/, '');
-              } catch (e) {
-                return false;
-              }
-            });
-
-            if (storedMatch) {
-              return storedMatch;
-            }
-          }
-
-          const pathMatch = links.find((a) => {
-            try {
-              return new URL(a.href, window.location.origin).pathname.replace(/\/+$/, '') === currentPath;
-            } catch (e) {
-              return false;
-            }
-          });
-
-          return pathMatch || links[0];
-        }
-
-        const initialActiveLink = resolveActiveLink();
-        if (initialActiveLink) {
-          placeIndicator(initialActiveLink, false);
-          setActiveLink(initialActiveLink);
-        }
-
-        // show indicator only when a link is clicked, and persist the choice
-        links.forEach((a) => {
-
-          a.addEventListener('click', (e) => {
-            const href = a.getAttribute('href');
-            try {
-              const url = new URL(href, window.location.href);
-              if (url.origin !== window.location.origin) return;
-            } catch (err) {
-              return;
-            }
-
-            e.preventDefault();
-            // persist which link was clicked so destination shows the indicator
-            try { localStorage.setItem('navActiveHref', new URL(href, window.location.href).href); } catch (err) {}
-            placeIndicator(a, true);
-            setActiveLink(a);
-            window.location.href = href;
-          });
-        });
-
-        let resizeTimer = null;
-        window.addEventListener('resize', () => {
-          clearTimeout(resizeTimer);
-          resizeTimer = setTimeout(() => {
-            // only reposition if indicator is visible (user has clicked before)
-            if (indicator.style.opacity === '1') {
-              const storedHref = localStorage.getItem('navActiveHref');
-              if (storedHref) {
-                const match = links.find((a) => {
-                  try { return new URL(a.href, window.location.origin).pathname.replace(/\/+$/, '') === new URL(storedHref, window.location.origin).pathname.replace(/\/+$/, ''); } catch (e) { return false; }
-                }) || resolveActiveLink();
-                if (match) {
-                  placeIndicator(match, false);
-                  setActiveLink(match);
-                }
-              }
-            }
-          }, 120);
-        });
-      }
-
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initNavIndicator);
-      } else {
-        initNavIndicator();
-      }
-    })();
-  </script>
 </body>
 </html>

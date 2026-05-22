@@ -84,13 +84,16 @@ class VerificationController extends Controller
             }
 
             $seen[$key] = true;
+            $lokasi = trim(($kec !== '' ? $kec : '') . ($desa !== '' ? ' / ' . $desa : '') . ($rw !== '' ? ' / RW ' . $rw : '') . ($rt !== '' ? ' / RT ' . $rt : ''));
+            
             $items[] = [
                 'label' => $name,
                 'value' => $name,
-                'secondary' => trim($kategori . ($desa !== '' ? ' • ' . $desa : '') . ($kec !== '' ? ' • ' . $kec : '')),
+                'kategori' => $kategori,
+                'lokasi' => $lokasi,
             ];
 
-            if (count($items) >= 8) {
+            if (count($items) >= 20) {
                 break;
             }
         }

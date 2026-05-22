@@ -12,6 +12,46 @@ Jalankan command ini kapan saja untuk refresh seed:
 php refresh-seed.php
 ```
 
+Jika `.env` berisi `GOOGLE_SHEETS_SPREADSHEET_ID` dan `GOOGLE_SERVICE_ACCOUNT_JSON`, command di atas akan:
+- sync tab Google Sheet ke workbook lokal,
+- lalu generate `ui/ui_seed_data.json` dari workbook tersebut.
+
+Jika env belum diisi, command tetap jalan dengan workbook lokal yang sudah ada.
+
+## Setup Google Service Account (Recommended)
+
+1. Buka Google Cloud Console, aktifkan **Google Sheets API** pada project.
+2. Buat **Service Account** dan generate key JSON.
+3. Simpan file key ke project, contoh:
+    - `storage/app/private/google/service-account.json`
+4. Share spreadsheet ke email service account (role Viewer cukup untuk read).
+5. Ambil Spreadsheet ID dari URL Google Sheet.
+6. Isi `.env`:
+
+```text
+GOOGLE_SHEETS_SPREADSHEET_ID=1AbCdEfGhIjKlMnOpQrStUvWxYz...
+GOOGLE_SERVICE_ACCOUNT_JSON=storage/app/private/google/service-account.json
+```
+
+7. Install dependency Python:
+
+```bash
+pip install -r requirements.txt
+```
+
+8. Jalankan refresh:
+
+```bash
+php refresh-seed.php
+```
+
+Script sync akan menarik tab berikut dari Google Sheet:
+- `Master_GoogleMaps`
+- `Master_Tokopedia`
+- `Data_Usaha_Besar`
+- `Daftar_KBLI`
+- `Hasil_Verifikasi`
+
 ## Sync Verifikasi ke Sheet Hasil_Verifikasi
 
 Jika verifikasi sudah tersimpan di database Laravel, jalankan command ini untuk append data yang belum tersinkron ke sheet `Hasil_Verifikasi`:
@@ -103,19 +143,22 @@ Ini akan jalankan refresh setiap hari jam 2 AM dan log output-nya ke `/tmp/umkm-
 ## Files Involved
 
 - `scripts/build_ui_seed.py` — Python script yang baca workbook
+- `scripts/sync_google_sheet_to_workbook.py` — Sync Google Sheet ke workbook via Service Account
 - `refresh-seed.php` — PHP wrapper untuk easy trigger
 - `ui/ui_seed_data.json` — Output seed data (auto-updated)
 - `app/Http/Controllers/Umkm/VerificationController.php` — Controller yang baca seed
 - `app/Console/Commands/SyncVerificationToWorkbook.php` — Command sinkronisasi verifikasi ke sheet
 - `scripts/append_verification_to_sheet.py` — Python append ke `Hasil_Verifikasi`
+- `requirements.txt` — Dependency Python untuk sync/generate
 
 ## Workflow
 
 1. **User mengubah data** di workbook Excel
 2. **Jalankan**: `php refresh-seed.php` (atau tunggu scheduler jam 2 AM)
-3. **Script baca workbook** dan update `ui_seed_data.json`
-4. **Controller membaca** seed yang sudah baru saat request `/umkm/verifikasi`
-5. **Browser refresh** menampilkan data terbaru
+3. **(Opsional Service Account)** script sync menarik data Google Sheet ke workbook lokal
+4. **Script baca workbook** dan update `ui_seed_data.json`
+5. **Controller membaca** seed yang sudah baru saat request `/umkm/verifikasi`
+6. **Browser refresh** menampilkan data terbaru
 
 ## Troubleshooting
 

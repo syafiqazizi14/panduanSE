@@ -10,12 +10,12 @@
 
 @section('content')
   <div class="min-h-screen pb-24">
-    <header class="relative overflow-hidden">
+    <header class="relative overflow-hidden border-b border-black/5 bg-white/60 backdrop-blur-xl">
       <div class="absolute inset-0 grain opacity-30"></div>
       <div class="relative mx-auto max-w-7xl px-3 py-4 sm:px-6 lg:px-8">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
-            <h1 class="mt-2 text-xl font-black tracking-tight text-ink sm:mt-3 sm:text-4xl">Daftar Usaha UMKM</h1>
+            <h1 class="text-xl font-black tracking-tight text-ink sm:text-4xl">Daftar Usaha UMKM</h1>
             <p class="mt-1 max-w-2xl text-xs leading-6 text-slate-600 sm:mt-2 sm:text-base">Daftar lengkap usaha mikro, kecil, dan menengah di Kabupaten Mojokerto dari data Google Maps dan Tokopedia.</p>
           </div>
         </div>
@@ -30,13 +30,23 @@
               <h2 class="text-lg font-black text-ink sm:text-xl">Daftar Usaha</h2>
               <p id="resultMeta" class="mt-1 text-xs text-slate-600 sm:text-sm" aria-live="polite">Menunggu data seed.</p>
             </div>
+            <div class="flex items-center gap-2 sm:gap-3">
+              <label for="itemsPerPage" class="text-xs sm:text-sm font-semibold text-slate-700">Tampilkan:</label>
+              <select id="itemsPerPage" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs sm:text-sm font-medium text-ink outline-none focus:border-forest focus:ring-2 focus:ring-forest/20 transition-all">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span class="text-xs sm:text-sm text-slate-600">per halaman</span>
+            </div>
             <button id="openFilterDrawer" type="button" class="inline-flex items-center gap-2 rounded-full bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 ring-1 ring-black/10 shadow-sm sm:px-3 sm:py-2 sm:text-sm">
               <span aria-hidden="true">☰</span>
               <span class="hidden sm:inline">Filter</span>
             </button>
           </div>
 
-          <div id="cardList" class="space-y-2" aria-live="polite"></div>
+          <div id="cardList" class="border border-slate-200 rounded-xl overflow-hidden" aria-live="polite"></div>
           <div id="paginationContainer" class="mt-4 flex flex-wrap items-center justify-center gap-1 sm:mt-6 sm:gap-2"></div>
         </section>
       </section>
@@ -252,32 +262,36 @@
 
     function renderCards() {
       const allFilteredCards = getFilteredCards();
-      state.currentPage = 1;
-      
       const totalItems = allFilteredCards.length;
       const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+      const safeTotalPages = Math.max(1, totalPages);
+      if (state.currentPage > safeTotalPages) {
+        state.currentPage = safeTotalPages;
+      }
+
       const startIdx = (state.currentPage - 1) * state.itemsPerPage;
       const endIdx = startIdx + state.itemsPerPage;
       const paginatedCards = allFilteredCards.slice(startIdx, endIdx);
       
-      els.resultMeta.textContent = `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`;
+      els.resultMeta.textContent = totalItems > 0
+        ? `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`
+        : 'Tidak ada data yang cocok dengan filter saat ini';
       
       els.cardList.innerHTML = paginatedCards.map((card) => {
-        const coordStr = formatCoordinates(card.source_latitude, card.source_longitude);
         const mapsUrl = getGoogleMapsUrl(card.source_latitude, card.source_longitude);
+        const nama = escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-');
+        const kategori = escapeHtml(card.kategori_sumber || card.kategori_jual || '');
+        const alamat = `${escapeHtml(card.nmkec || '')} / ${escapeHtml(card.nmdesa || '')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}`.trim();
+        
         const nameHtml = mapsUrl ? 
-          `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="font-semibold text-blue-600 hover:text-blue-800 underline">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</a>` :
-          `<span class="font-semibold">${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-')}</span>`;
+          `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${nama}</a>` :
+          nama;
         
         return `
-        <article class="w-full rounded-2xl bg-white/85 px-3 py-3 shadow-sm ring-1 ring-black/5 transition hover:bg-white sm:px-4 sm:py-3" aria-label="Detail ${escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || 'usaha')}">
-          <div class="space-y-1.5">
-            <div class="text-sm font-semibold text-ink sm:text-base">${nameHtml}</div>
-            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.kategori_sumber || card.kategori_jual || '-')}</p>
-            <p class="text-xs text-slate-600 sm:text-sm">${escapeHtml(card.nmkec || '-')} / ${escapeHtml(card.nmdesa || '-')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}</p>
-            ${coordStr ? `<p class="text-xs text-slate-500 sm:text-sm">${coordStr}</p>` : ''}
-          </div>
-        </article>
+        <div class="border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-slate-50 transition-colors">
+          <div class="text-sm sm:text-base font-medium">${nameHtml}</div>
+          <div class="text-xs text-slate-600 mt-1">${kategori}${kategori && alamat ? ' • ' : ''}${alamat}</div>
+        </div>
       `;
       }).join('');
       
@@ -362,6 +376,17 @@
     els.rt.addEventListener('change', (e) => { state.selectedRt = e.target.value; renderCards(); });
     els.matchStatus.addEventListener('change', (e) => { state.matchStatus = e.target.value; renderCards(); });
     els.searchQuery.addEventListener('input', (e) => { state.searchQuery = e.target.value; renderCards(); });
+    
+    // Items per page selector
+    const itemsPerPageSelect = document.getElementById('itemsPerPage');
+    if (itemsPerPageSelect) {
+      itemsPerPageSelect.addEventListener('change', (e) => {
+        state.itemsPerPage = parseInt(e.target.value, 10);
+        state.currentPage = 1;
+        renderCards();
+      });
+    }
+    
     els.openFilterDrawer.addEventListener('click', openFilterDrawer);
     els.closeFilterDrawer.addEventListener('click', closeFilterDrawer);
     els.filterDrawerBackdrop.addEventListener('click', closeFilterDrawer);

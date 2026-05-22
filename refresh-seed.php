@@ -15,15 +15,21 @@ class UmkmSeedRefresher
 {
     private $projectRoot;
     private $scriptPath;
+    private $syncScriptPath;
     private $seedPath;
     private $workbookPath;
+    private $googleSpreadsheetId;
+    private $googleServiceAccountJson;
 
     public function __construct()
     {
         $this->projectRoot = __DIR__;
         $this->scriptPath = $this->projectRoot . '/scripts/build_ui_seed.py';
+        $this->syncScriptPath = $this->projectRoot . '/scripts/sync_google_sheet_to_workbook.py';
         $this->seedPath = $this->projectRoot . '/ui/ui_seed_data.json';
         $this->workbookPath = $this->projectRoot . '/Data UMKM Online Shop Kabupaten Mojokerto.xlsx';
+        $this->googleSpreadsheetId = $this->readEnvValue('GOOGLE_SHEETS_SPREADSHEET_ID');
+        $this->googleServiceAccountJson = $this->readEnvValue('GOOGLE_SERVICE_ACCOUNT_JSON');
     }
 
     public function run()
@@ -50,6 +56,14 @@ class UmkmSeedRefresher
     {
         echo "[*] UMKM Seed Generation\n";
         echo "─────────────────────────────────────\n\n";
+
+        if ($this->shouldSyncFromGoogle()) {
+            $this->syncWorkbookFromGoogleSheets();
+            echo "\n";
+        } else {
+            echo "[i] Google Service Account sync disabled (GOOGLE_SHEETS_SPREADSHEET_ID / GOOGLE_SERVICE_ACCOUNT_JSON belum diisi).\n";
+            echo "[i] Menggunakan workbook lokal yang sudah ada.\n";
+        }
 
         // Check workbook exists
         if (!file_exists($this->workbookPath)) {
@@ -160,6 +174,96 @@ class UmkmSeedRefresher
         return null;
     }
 
+    private function shouldSyncFromGoogle()
+    {
+        return !empty($this->googleSpreadsheetId) && !empty($this->googleServiceAccountJson);
+    }
+
+    private function syncWorkbookFromGoogleSheets()
+    {
+        echo "[*] Sync workbook from Google Sheets (Service Account)\n";
+
+        if (!file_exists($this->syncScriptPath)) {
+            echo "[✗] ERROR: Sync script not found at:\n";
+            echo "    {$this->syncScriptPath}\n";
+            exit(1);
+        }
+
+        $credentialsPath = $this->googleServiceAccountJson;
+        if (!preg_match('/^[A-Za-z]:\\\\|^\\\\\\\\|^\//', $credentialsPath)) {
+            $credentialsPath = $this->projectRoot . DIRECTORY_SEPARATOR . ltrim($credentialsPath, '\\\\/');
+        }
+
+        if (!file_exists($credentialsPath)) {
+            echo "[✗] ERROR: Service account JSON not found at:\n";
+            echo "    {$credentialsPath}\n";
+            exit(1);
+        }
+
+        $python = $this->findPython();
+        if (!$python) {
+            echo "[✗] ERROR: Python executable not found.\n";
+            exit(1);
+        }
+
+        $command = "cd {$this->projectRoot} && \"{$python}\" \"{$this->syncScriptPath}\""
+            . " --spreadsheet-id \"{$this->googleSpreadsheetId}\""
+            . " --credentials \"{$credentialsPath}\""
+            . " --output \"{$this->workbookPath}\" 2>&1";
+
+        $output = [];
+        $returnCode = 0;
+        exec($command, $output, $returnCode);
+
+        if ($returnCode !== 0) {
+            echo "[✗] ERROR: Google Sheets sync failed!\n";
+            echo "\nOutput:\n";
+            echo implode("\n", $output) . "\n";
+            exit(1);
+        }
+
+        echo "[✓] Google Sheets sync completed\n";
+        foreach ($output as $line) {
+            echo "    " . $line . "\n";
+        }
+    }
+
+    private function readEnvValue($key)
+    {
+        $value = getenv($key);
+        if ($value !== false && trim((string)$value) !== '') {
+            return trim((string)$value);
+        }
+
+        $envPath = $this->projectRoot . '/.env';
+        if (!file_exists($envPath)) {
+            return null;
+        }
+
+        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+            if (!str_contains($line, '=')) {
+                continue;
+            }
+            [$name, $raw] = explode('=', $line, 2);
+            if (trim($name) !== $key) {
+                continue;
+            }
+
+            $raw = trim($raw);
+            if ((str_starts_with($raw, '"') && str_ends_with($raw, '"')) || (str_starts_with($raw, "'") && str_ends_with($raw, "'"))) {
+                $raw = substr($raw, 1, -1);
+            }
+            return $raw;
+        }
+
+        return null;
+    }
+
     private function showHelp()
     {
         echo "UMKM Seed Refresh - Regenerate UI seed data from workbook\n";
@@ -175,8 +279,13 @@ class UmkmSeedRefresher
         echo "\n";
         echo "Files:\n";
         echo "  Workbook: Data UMKM Online Shop Kabupaten Mojokerto.xlsx\n";
+        echo "  Optional Sync: scripts/sync_google_sheet_to_workbook.py (Service Account)\n";
         echo "  Python Script: scripts/build_ui_seed.py\n";
         echo "  Seed Output: ui/ui_seed_data.json\n";
+        echo "\n";
+        echo "Optional .env keys for Google sync:\n";
+        echo "  GOOGLE_SHEETS_SPREADSHEET_ID=...\n";
+        echo "  GOOGLE_SERVICE_ACCOUNT_JSON=storage/app/private/google/service-account.json\n";
     }
 }
 

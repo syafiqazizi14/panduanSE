@@ -430,17 +430,21 @@
       const allFilteredCards = getFilteredCards();
       applyViewModeClasses();
       
-      // Reset to page 1 if filter changes
-      state.currentPage = 1;
-      
       // Calculate pagination
       const totalItems = allFilteredCards.length;
       const totalPages = Math.ceil(totalItems / state.itemsPerPage);
+      const safeTotalPages = Math.max(1, totalPages);
+      if (state.currentPage > safeTotalPages) {
+        state.currentPage = safeTotalPages;
+      }
+
       const startIdx = (state.currentPage - 1) * state.itemsPerPage;
       const endIdx = startIdx + state.itemsPerPage;
       const paginatedCards = allFilteredCards.slice(startIdx, endIdx);
       
-      els.resultMeta.textContent = `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`;
+      els.resultMeta.textContent = totalItems > 0
+        ? `Menampilkan ${startIdx + 1}-${Math.min(endIdx, totalItems)} dari ${totalItems} usaha`
+        : 'Tidak ada data yang cocok dengan filter saat ini';
     }
 
     function formatCoordinates(lat, lon) {
