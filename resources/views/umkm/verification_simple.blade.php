@@ -16,7 +16,6 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div class="min-w-0 flex-1">
             <h1 class="text-xl font-black tracking-tight text-ink sm:text-4xl">Daftar Usaha UMKM</h1>
-            <p class="mt-1 max-w-2xl text-xs leading-6 text-slate-600 sm:mt-2 sm:text-base">Daftar lengkap usaha mikro, kecil, dan menengah di Kabupaten Mojokerto dari data Google Maps dan Tokopedia.</p>
           </div>
         </div>
       </div>
@@ -102,14 +101,6 @@
         </select>
       </div>
       <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
-        <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Status</label>
-        <select id="matchStatus" class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm font-medium outline-none transition focus:border-amber-500 focus:bg-white">
-          <option value="ALL">Semua status</option>
-          <option value="MATCH">MATCH</option>
-          <option value="NOT_MATCH">NOT_MATCH</option>
-        </select>
-      </div>
-      <div class="rounded-2xl bg-white p-3 shadow-soft ring-1 ring-black/5">
         <label class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Pencarian</label>
         <input id="searchQuery" type="search" placeholder="Cari nama usaha, desa, kecamatan..." class="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-amber-500 focus:bg-white" />
       </div>
@@ -135,7 +126,6 @@
       desa: document.getElementById('desa'),
       rw: document.getElementById('rw'),
       rt: document.getElementById('rt'),
-      matchStatus: document.getElementById('matchStatus'),
       searchQuery: document.getElementById('searchQuery'),
       openFilterDrawer: document.getElementById('openFilterDrawer'),
       cardList: document.getElementById('cardList'),
@@ -152,7 +142,6 @@
       selectedDesa: null,
       selectedRw: null,
       selectedRt: null,
-      matchStatus: 'ALL',
       searchQuery: '',
       currentPage: 1,
       itemsPerPage: 10,
@@ -202,7 +191,6 @@
         const desaMatch = !state.selectedDesa || card.nmdesa === state.selectedDesa;
         const rwMatch = !state.selectedRw || card.rw === state.selectedRw;
         const rtMatch = !state.selectedRt || card.rt === state.selectedRt;
-        const statusMatch = state.matchStatus === 'ALL' || card.match_status === state.matchStatus;
         
         const searchLower = state.searchQuery.toLowerCase();
         const searchMatch = !searchLower || 
@@ -211,7 +199,7 @@
           (card.nmdesa && card.nmdesa.toLowerCase().includes(searchLower)) ||
           (card.nmkec && card.nmkec.toLowerCase().includes(searchLower));
         
-        return sourceMatch && kecMatch && desaMatch && rwMatch && rtMatch && statusMatch && searchMatch;
+        return sourceMatch && kecMatch && desaMatch && rwMatch && rtMatch && searchMatch;
       });
     }
 
@@ -282,17 +270,30 @@
         const nama = escapeHtml(card.nama_usaha_sumber || card.match_nama_usaha || '-');
         const kategori = escapeHtml(card.kategori_sumber || card.kategori_jual || '');
         const alamat = `${escapeHtml(card.nmkec || '')} / ${escapeHtml(card.nmdesa || '')} ${card.rw ? `/ RW ${escapeHtml(card.rw)}` : ''} ${card.rt ? `/ RT ${escapeHtml(card.rt)}` : ''}`.trim();
-        
-        const nameHtml = mapsUrl ? 
-          `<a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:text-blue-800 underline">${nama}</a>` :
-          nama;
-        
+
+        const cardContent = `
+          <div class="flex items-start justify-between gap-3">
+            <div class="min-w-0 flex-1">
+              <div class="text-sm sm:text-base font-medium ${mapsUrl ? 'text-blue-600 underline decoration-blue-400 decoration-1 underline-offset-2 hover:text-blue-800' : 'text-ink'}">${nama}</div>
+              <div class="mt-1 text-xs text-slate-600">${kategori}${kategori && alamat ? ' • ' : ''}${alamat}</div>
+            </div>
+            ${mapsUrl ? '' : ''}
+          </div>
+        `;
+
+        if (mapsUrl) {
+          return `
+            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="block border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-slate-50 transition-colors cursor-pointer">
+              ${cardContent}
+            </a>
+          `;
+        }
+
         return `
-        <div class="border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-slate-50 transition-colors">
-          <div class="text-sm sm:text-base font-medium">${nameHtml}</div>
-          <div class="text-xs text-slate-600 mt-1">${kategori}${kategori && alamat ? ' • ' : ''}${alamat}</div>
-        </div>
-      `;
+          <div class="border-b border-slate-200 px-3 py-2.5 sm:px-4 sm:py-3 hover:bg-slate-50 transition-colors">
+            ${cardContent}
+          </div>
+        `;
       }).join('');
       
       renderPagination(totalPages, totalItems);
@@ -374,7 +375,6 @@
     els.desa.addEventListener('change', (e) => { state.selectedDesa = e.target.value; renderRwRtOptions(); renderCards(); });
     els.rw.addEventListener('change', (e) => { state.selectedRw = e.target.value; renderCards(); });
     els.rt.addEventListener('change', (e) => { state.selectedRt = e.target.value; renderCards(); });
-    els.matchStatus.addEventListener('change', (e) => { state.matchStatus = e.target.value; renderCards(); });
     els.searchQuery.addEventListener('input', (e) => { state.searchQuery = e.target.value; renderCards(); });
     
     // Items per page selector

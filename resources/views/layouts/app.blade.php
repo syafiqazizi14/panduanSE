@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>{{ $pageTitle ?? 'UMKM Mojokerto - Verifikasi Lapangan' }}</title>
+  <link rel="icon" type="image/png" href="/favicon-bps.png?v=3">
+  <link rel="apple-touch-icon" href="/favicon-bps.png?v=3">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -65,31 +67,71 @@
 
   <nav class="w-full border-b border-black/5 bg-white/90 backdrop-blur-sm">
     <div class="mx-auto max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
-      <div class="flex items-center justify-between gap-4">
-        <div class="flex items-center gap-4 sm:gap-6">
+      <div class="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <div class="flex flex-wrap items-center gap-2 sm:gap-4 sm:gap-y-2">
           <img src="{{ asset('assets/Logo BPS Baru 2.png') }}" alt="Logo BPS Mojokerto" class="h-7 sm:h-9">
-          <a href="/panduanSE/usaha-umkm" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/usaha-umkm' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha UMKM</a>
-          <a href="/panduanSE/usaha-besar" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/usaha-besar' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha Besar</a>
-          <a href="/panduanSE/kbli" class="relative px-3 py-2 text-sm font-medium transition-all duration-300 rounded-lg hover:scale-105 {{ request()->path() === 'panduanSE/kbli' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">KBLI</a>
+          <a href="/panduanSE/usaha-umkm" class="relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 {{ request()->path() === 'panduanSE/usaha-umkm' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha UMKM</a>
+          <a href="/panduanSE/usaha-besar" class="relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 {{ request()->path() === 'panduanSE/usaha-besar' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">Usaha Besar</a>
+          <a href="/panduanSE/kbli" class="relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-300 hover:scale-105 {{ request()->path() === 'panduanSE/kbli' ? 'text-forest bg-forest/10' : 'text-slate-700 hover:text-forest hover:bg-forest/10' }}">KBLI</a>
         </div>
-        <div class="relative ml-auto w-full max-w-lg">
+        <div class="relative flex w-full flex-col gap-3 xl:ml-auto xl:max-w-2xl xl:flex-row xl:items-center">
           <form id="globalSearchForm" method="GET" action="/panduanSE/usaha-umkm" class="w-full">
             <label for="globalSearch" class="sr-only">Cari</label>
-            <div class="relative group">
-              <div class="absolute left-0 top-0 bottom-0 flex items-center justify-center w-10 pointer-events-none text-slate-400 group-focus-within:text-forest transition-colors">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <div class="relative group flex-1">
+                <div class="absolute left-0 top-0 bottom-0 flex items-center justify-center w-10 pointer-events-none text-slate-400 group-focus-within:text-forest transition-colors">
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                  </svg>
+                </div>
+                <input id="globalSearch" name="q" type="search" autocomplete="off" placeholder="Cari usaha..." class="w-full rounded-2xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-all duration-300 focus:border-forest focus:ring-2 focus:ring-forest/20 hover:border-slate-400" />
               </div>
-              <input id="globalSearch" name="q" type="search" autocomplete="off" placeholder="Cari usaha..." class="w-full rounded-2xl border border-slate-300 bg-white pl-10 pr-4 py-2.5 text-sm outline-none transition-all duration-300 focus:border-forest focus:ring-2 focus:ring-forest/20 hover:border-slate-400" />
-              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg px-3 py-1.5 text-xs font-semibold bg-forest text-white transition-all duration-300 hover:bg-forest/90 active:scale-95">Cari</button>
+              <button type="submit" class="w-full rounded-2xl bg-forest px-4 py-2.5 text-sm font-semibold text-white transition-all duration-300 hover:bg-forest/90 active:scale-95 sm:w-auto sm:px-3 sm:py-1.5 sm:text-xs">Cari</button>
             </div>
           </form>
+          <button id="openRefreshModal" type="button" class="w-full rounded-2xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:bg-slate-800 active:scale-[0.99] xl:w-auto">Refresh Data</button>
           <div id="globalSearchSuggestions" class="absolute left-0 right-0 top-full z-50 mt-3 hidden rounded-2xl border border-slate-200 bg-white shadow-lg"></div>
         </div>
       </div>
     </div>
   </nav>
+
+  <div id="refreshModalBackdrop" class="hidden fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-sm"></div>
+  <div id="refreshModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center px-4">
+    <div class="w-full max-w-md rounded-[2rem] bg-white p-4 shadow-[0_30px_90px_rgba(15,23,42,0.25)] ring-1 ring-black/5 sm:p-6">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-[10px] uppercase tracking-[0.24em] text-slate-500 sm:text-xs">Refresh data</p>
+          <h2 class="mt-1 text-xl font-black text-ink sm:text-2xl">Masukkan password</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Tombol ini akan merefresh semua data sekaligus, termasuk seed utama, Usaha Besar, dan KBLI.</p>
+        </div>
+        <button id="closeRefreshModal" type="button" class="rounded-full bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700">Tutup</button>
+      </div>
+      <div class="mt-4 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+        <div class="flex items-start gap-3">
+          <div class="mt-0.5 h-2.5 w-2.5 rounded-full bg-amber-500"></div>
+          <p>Pastikan password refresh hanya dipegang petugas yang berwenang. Setelah dijalankan, sistem akan memuat ulang semua seed dari spreadsheet.</p>
+        </div>
+      </div>
+      <div class="mt-5 space-y-4">
+        <div>
+          <label for="refreshPassword" class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">Password</label>
+          <input id="refreshPassword" type="password" autocomplete="current-password" placeholder="Masukkan password refresh" class="mt-2 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm outline-none transition focus:border-forest focus:bg-white focus:ring-2 focus:ring-forest/20">
+        </div>
+        <div class="flex items-center gap-3">
+          <button id="submitRefreshModal" type="button" class="inline-flex flex-1 items-center justify-center gap-2 rounded-2xl bg-forest px-4 py-3 text-sm font-bold text-white shadow-soft transition hover:bg-forest/90">
+            <svg id="refreshSpinner" class="hidden h-4 w-4 animate-spin text-white" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a10 10 0 100 20 10 10 0 000-20z"></path>
+            </svg>
+            <span id="submitRefreshLabel">Jalankan Refresh</span>
+          </button>
+          <button id="cancelRefreshModal" type="button" class="inline-flex rounded-2xl bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700">Batal</button>
+        </div>
+        <p id="refreshModalMessage" class="hidden rounded-2xl px-4 py-3 text-sm" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
 
   @yield('content')
   <script>
@@ -185,6 +227,126 @@
       });
 
       form.addEventListener('submit', hideBox);
+    })();
+
+    (function () {
+      const openBtn = document.getElementById('openRefreshModal');
+      const modal = document.getElementById('refreshModal');
+      const backdrop = document.getElementById('refreshModalBackdrop');
+      const closeBtn = document.getElementById('closeRefreshModal');
+      const cancelBtn = document.getElementById('cancelRefreshModal');
+      const submitBtn = document.getElementById('submitRefreshModal');
+      const submitLabel = document.getElementById('submitRefreshLabel');
+      const spinner = document.getElementById('refreshSpinner');
+      const passwordInput = document.getElementById('refreshPassword');
+      const message = document.getElementById('refreshModalMessage');
+      if (!openBtn || !modal || !backdrop || !closeBtn || !cancelBtn || !submitBtn || !submitLabel || !spinner || !passwordInput || !message) {
+        return;
+      }
+
+      const endpoint = @json(route('panduanSE.refresh'));
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+      function openModal() {
+        modal.classList.remove('hidden');
+        backdrop.classList.remove('hidden');
+        passwordInput.value = '';
+        message.className = 'hidden rounded-2xl px-4 py-3 text-sm';
+        message.textContent = '';
+        setTimeout(() => passwordInput.focus(), 50);
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+        backdrop.classList.add('hidden');
+      }
+
+      function showMessage(text, type) {
+        if (!text) {
+          message.className = 'hidden rounded-2xl px-4 py-3 text-sm';
+          message.textContent = '';
+          return;
+        }
+
+        const classes = ['rounded-2xl px-4 py-3 text-sm'];
+        if (type === 'success') classes.push('bg-emerald-100 text-emerald-800');
+        else if (type === 'error') classes.push('bg-rose-100 text-rose-800');
+        else if (type === 'info') classes.push('bg-slate-100 text-slate-700');
+        else classes.push('bg-slate-100 text-slate-700');
+        message.className = classes.join(' ');
+        message.textContent = text;
+      }
+
+      function reloadWithFreshUrl() {
+        const url = new URL(window.location.href);
+        url.searchParams.set('_refresh', Date.now().toString());
+        window.location.replace(url.toString());
+      }
+
+      function setLoading(isLoading) {
+        submitBtn.disabled = isLoading;
+        passwordInput.disabled = isLoading;
+        spinner.classList.toggle('hidden', !isLoading);
+        submitLabel.textContent = isLoading ? 'Memproses...' : 'Jalankan Refresh';
+        submitBtn.classList.toggle('opacity-80', isLoading);
+        submitBtn.classList.toggle('cursor-not-allowed', isLoading);
+      }
+
+      async function submitRefresh() {
+        const password = passwordInput.value.trim();
+        if (!password) {
+          showMessage('Password wajib diisi.', 'error');
+          return;
+        }
+
+        setLoading(true);
+        showMessage('Sedang menjalankan refresh semua data...', 'info');
+
+        try {
+          const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': csrfToken,
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+            body: JSON.stringify({ password }),
+          });
+
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.ok) {
+            throw new Error(data.message || 'Refresh gagal dijalankan.');
+          }
+
+          showMessage(data.message || 'Refresh selesai.', 'success');
+          setLoading(false);
+          setTimeout(() => {
+            closeModal();
+            reloadWithFreshUrl();
+          }, 900);
+        } catch (error) {
+          showMessage(error.message || 'Gagal menjalankan refresh.', 'error');
+        } finally {
+          setLoading(false);
+        }
+      }
+
+      openBtn.addEventListener('click', openModal);
+      closeBtn.addEventListener('click', closeModal);
+      cancelBtn.addEventListener('click', closeModal);
+      backdrop.addEventListener('click', closeModal);
+      submitBtn.addEventListener('click', submitRefresh);
+      passwordInput.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+          submitRefresh();
+        }
+      });
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
     })();
   </script>
   @stack('scripts')

@@ -105,6 +105,10 @@ return [
         ),
     ],
 
+    'pandu_refresh_password' => env('PANDU_REFRESH_PASSWORD', ''),
+    'pandu_php_binary' => env('PANDU_PHP_BINARY', 'php'),
+    'pandu_python_binary' => env('PANDU_PYTHON_BINARY', ''),
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver

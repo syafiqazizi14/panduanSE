@@ -66,7 +66,7 @@
       <div class="flex items-start justify-between gap-3">
         <div>
           <p class="text-xs uppercase tracking-[0.24em] text-slate-500">Filter</p>
-          <h3 id="filterDrawerTitle" class="mt-1 text-xl font-black text-ink">Saring data</h3>
+          <h3 id="filterDrawerTitle" class="mt-1 text-xl font-black text-ink">Filter Data</h3>
         </div>
         <button id="closeFilterDrawer" class="rounded-full bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-700">Tutup</button>
       </div>

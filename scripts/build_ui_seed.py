@@ -119,13 +119,32 @@ def build_seed() -> dict:
             position = idx.get(name)
             return safe_value(row[position]) if position is not None and position < len(row) else None
 
+        def first_available(*names: str):
+            for name in names:
+                value = get(name)
+                if value not in (None, ''):
+                    return value
+            return None
+
         kecamatan = get('nmkec')
         desa = get('nmdesa')
         nmsls = get('nmsls')
         rt, rw = parse_rw_rt(nmsls)
         match_status = 'MATCH' if str(get('is_matched')).upper() == 'TRUE' else 'NOT_MATCH'
-        lat_raw = as_float(get('source_latitude_normalized') or get('source_latitude'))
-        lon_raw = as_float(get('source_longitude_normalized') or get('source_longitude'))
+        lat_raw = as_float(first_available(
+            'source_latitude_normalized',
+            'source_latitude',
+            'scraping_lat_x',
+            'match_latitude',
+            'candidate_latitude',
+        ))
+        lon_raw = as_float(first_available(
+            'source_longitude_normalized',
+            'source_longitude',
+            'scraping_lon_x',
+            'match_longitude',
+            'candidate_longitude',
+        ))
         lat_final, lon_final = normalize_coords(lat_raw, lon_raw)
         normalized = {
             'source_tab': source_tab,
@@ -189,12 +208,54 @@ def build_seed() -> dict:
     preview_cards = gmaps_rows[:5] + tokped_rows[:5]
     cards = gmaps_rows + tokped_rows
 
+    usaha_besar_rows = []
+    if 'Data_Usaha_Besar' in wb.sheetnames:
+        ub_ws = wb['Data_Usaha_Besar']
+        ub_header = list(next(ub_ws.iter_rows(min_row=1, max_row=1, values_only=True), []))
+        ub_idx = {name: i for i, name in enumerate(ub_header) if name}
+
+        for row in ub_ws.iter_rows(min_row=2, values_only=True):
+            row = list(row)
+            if not any(value not in (None, '') for value in row):
+                continue
+
+            def ub_get(name: str):
+                position = ub_idx.get(name)
+                return safe_value(row[position]) if position is not None and position < len(row) else None
+
+            usaha_besar_rows.append({
+                'id_usaha_besar': ub_get('id_usaha_besar'),
+                'nama_usaha': ub_get('nama_usaha'),
+                'nama_pencacah': ub_get('nama_pencacah'),
+                'status': ub_get('status'),
+            })
+
+    kbli_rows = []
+    if 'Daftar_KBLI' in wb.sheetnames:
+        kbli_ws = wb['Daftar_KBLI']
+        kbli_header = list(next(kbli_ws.iter_rows(min_row=1, max_row=1, values_only=True), []))
+        kbli_idx = {name: i for i, name in enumerate(kbli_header) if name}
+
+        for row in kbli_ws.iter_rows(min_row=2, values_only=True):
+            row = list(row)
+            if not any(value not in (None, '') for value in row):
+                continue
+
+            def kbli_get(name: str):
+                position = kbli_idx.get(name)
+                return safe_value(row[position]) if position is not None and position < len(row) else None
+
+            kbli_rows.append({
+                'kode': kbli_get('Kode') or kbli_get('KBLI'),
+                'deskripsi': kbli_get('Deskripsi') or kbli_get('Judul'),
+            })
+
     seed = {
         'meta': {
             'source_file': WORKBOOK_PATH.name,
             'generated_at': datetime.now().isoformat(timespec='seconds'),
             'ui_ready': True,
-            'sheets': ['Master_GoogleMaps', 'Master_Tokopedia', 'Hasil_Verifikasi'],
+            'sheets': ['Master_GoogleMaps', 'Master_Tokopedia', 'Data_Usaha_Besar', 'Daftar_KBLI', 'Hasil_Verifikasi'],
             'total_rows': len(gmaps_rows) + len(tokped_rows),
             'googlemaps_rows': len(gmaps_rows),
             'tokopedia_rows': len(tokped_rows),
@@ -202,6 +263,8 @@ def build_seed() -> dict:
             'desa_count_total': len(desa_set),
             'matched_true': matched_true,
             'matched_false': matched_false,
+            'usaha_besar_rows': len(usaha_besar_rows),
+            'kbli_rows': len(kbli_rows),
         },
         'filters': {
             'kecamatan': sorted(kecamatan_set),
@@ -220,6 +283,8 @@ def build_seed() -> dict:
         },
         'cards': cards,
         'preview_cards': preview_cards,
+        'usaha_besar': usaha_besar_rows,
+        'kbli': kbli_rows,
     }
     return seed
 

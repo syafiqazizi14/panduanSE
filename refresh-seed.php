@@ -157,14 +157,51 @@ class UmkmSeedRefresher
 
     private function findPython()
     {
+        // Allow explicit override from .env: PANDU_PYTHON_BINARY
+        $envPath = $this->readEnvValue('PANDU_PYTHON_BINARY');
+        if (!empty($envPath)) {
+                    // If relative or not absolute, try to resolve relative to project root
+                    if (!preg_match('/^[A-Za-z]:[\\\\\/]|^\\\\\\\\|^\//', $envPath)) {
+                    $resolved = $this->projectRoot . DIRECTORY_SEPARATOR . ltrim($envPath, '\\/');
+            } else {
+                $resolved = $envPath;
+            }
+
+                // Try normalized variants to handle forward/backslash differences across environments
+                $variants = [
+                    $resolved,
+                    str_replace('/', DIRECTORY_SEPARATOR, $resolved),
+                    str_replace('\\\\', DIRECTORY_SEPARATOR, $resolved),
+                    str_replace('/', '\\\\', $resolved),
+                ];
+
+                foreach ($variants as $v) {
+                    if ($v && file_exists($v)) {
+                        return $v;
+                    }
+                }
+        }
+
         $candidates = [
+            $this->projectRoot . DIRECTORY_SEPARATOR . '.venv' . DIRECTORY_SEPARATOR . 'Scripts' . DIRECTORY_SEPARATOR . 'python.exe',
+            $this->projectRoot . DIRECTORY_SEPARATOR . '.venv' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'python',
             'python',
             'python3',
             'python.exe',
             'python3.exe',
+            // Common absolute installation paths on Windows
+            'C:\\Program Files\\Python312\\python.exe',
+            'C:\\Program Files (x86)\\Python312\\python.exe',
         ];
 
         foreach ($candidates as $cmd) {
+            if (preg_match('/^[A-Za-z]:\\\\|^\\\\\\\\|^\//', $cmd)) {
+                if (file_exists($cmd)) {
+                    return $cmd;
+                }
+                continue;
+            }
+
             $test = shell_exec("where {$cmd} 2>nul") ?: shell_exec("which {$cmd} 2>/dev/null");
             if ($test) {
                 return trim($test);
@@ -176,6 +213,11 @@ class UmkmSeedRefresher
 
     private function shouldSyncFromGoogle()
     {
+        $skip = getenv('SKIP_GOOGLE_SYNC');
+        if ($skip !== false && in_array(strtolower((string)$skip), ['1','true','yes'], true)) {
+            return false;
+        }
+
         return !empty($this->googleSpreadsheetId) && !empty($this->googleServiceAccountJson);
     }
 
@@ -190,7 +232,7 @@ class UmkmSeedRefresher
         }
 
         $credentialsPath = $this->googleServiceAccountJson;
-        if (!preg_match('/^[A-Za-z]:\\\\|^\\\\\\\\|^\//', $credentialsPath)) {
+                if (!preg_match('/^[A-Za-z]:[\\\\\/]|^\\\\\\\\|^\//', $credentialsPath)) {
             $credentialsPath = $this->projectRoot . DIRECTORY_SEPARATOR . ltrim($credentialsPath, '\\\\/');
         }
 
@@ -230,35 +272,35 @@ class UmkmSeedRefresher
 
     private function readEnvValue($key)
     {
+        $envPath = $this->projectRoot . '/.env';
+        if (file_exists($envPath)) {
+            $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            foreach ($lines as $line) {
+                $line = trim($line);
+                if ($line === '' || str_starts_with($line, '#')) {
+                    continue;
+                }
+                if (!str_contains($line, '=')) {
+                    continue;
+                }
+                [$name, $raw] = explode('=', $line, 2);
+                if (trim($name) !== $key) {
+                    continue;
+                }
+
+                $raw = trim($raw);
+                if ((str_starts_with($raw, '"') && str_ends_with($raw, '"')) || (str_starts_with($raw, "'") && str_ends_with($raw, "'"))) {
+                    $raw = substr($raw, 1, -1);
+                }
+                if ($raw !== '') {
+                    return $raw;
+                }
+            }
+        }
+
         $value = getenv($key);
         if ($value !== false && trim((string)$value) !== '') {
             return trim((string)$value);
-        }
-
-        $envPath = $this->projectRoot . '/.env';
-        if (!file_exists($envPath)) {
-            return null;
-        }
-
-        $lines = file($envPath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if ($line === '' || str_starts_with($line, '#')) {
-                continue;
-            }
-            if (!str_contains($line, '=')) {
-                continue;
-            }
-            [$name, $raw] = explode('=', $line, 2);
-            if (trim($name) !== $key) {
-                continue;
-            }
-
-            $raw = trim($raw);
-            if ((str_starts_with($raw, '"') && str_ends_with($raw, '"')) || (str_starts_with($raw, "'") && str_ends_with($raw, "'"))) {
-                $raw = substr($raw, 1, -1);
-            }
-            return $raw;
         }
 
         return null;

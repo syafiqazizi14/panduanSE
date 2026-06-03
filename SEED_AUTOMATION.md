@@ -126,6 +126,31 @@ Untuk Laravel scheduler (jika project Laravel sudah bootstrap penuh), command be
 - `umkm:generate-seed` (daily 02:00)
 - `umkm:sync-verification-sheet --limit=500` (setiap 10 menit)
 
+## Real-time Google Sheets Webhook
+
+Jika kamu ingin perubahan manual di Google Sheet langsung memicu refresh UI, gunakan Apps Script webhook.
+
+### Endpoint produksi
+
+Pakai endpoint berikut di Apps Script:
+
+```text
+https://selancar.kanal3516.site/panduanSE/webhook/sheet-sync
+```
+
+### Trigger yang wajib dipakai
+
+- Gunakan **installable trigger** untuk `onEdit` dan/atau `onChange`.
+- Jangan pakai simple trigger saja, karena `UrlFetchApp.fetch()` bisa gagal tanpa otorisasi penuh.
+- Setelah mengganti URL atau secret, simpan script lalu pasang ulang trigger dari Apps Script editor.
+
+### Checklist cepat
+
+1. Update `WEBHOOK_URL` ke domain produksi.
+2. Pastikan `WEBHOOK_SECRET` sama dengan `.env` `SYNC_WEBHOOK_SECRET`.
+3. Pasang ulang trigger `onEdit` dan `onChange`.
+4. Uji lewat fungsi `testWebhookSync()` di Apps Script editor.
+
 ### Setup untuk Linux/Mac
 
 Edit crontab:
